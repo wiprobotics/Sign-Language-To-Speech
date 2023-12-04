@@ -19,6 +19,8 @@ hands = mp_hands.Hands(min_detection_confidence=0.3, max_num_hands=2)
 
 labelsDict = {}
 
+print(model_dict['orderedLabels'])
+
 # Dictionary to convert the label number to a letter
 for label in model_dict['orderedLabels']:
     print(label)
@@ -51,7 +53,7 @@ while True:
         # Truncate or pad the item to exactly 84 elements
         dataOut = dataOut[:84]
 
-        print(dataOut)
+        # print(dataOut)
 
         prediction = model.predict(np.array([dataOut]))
 
