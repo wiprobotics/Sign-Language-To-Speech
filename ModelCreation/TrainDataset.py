@@ -2,7 +2,7 @@ import pickle
 import numpy as np
 import os
 
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
@@ -32,7 +32,7 @@ print("Number of samples: " + str(len(allData)) + "\nNumber of labels: " + str(l
 
 xTrain, xTest, yTrain, yTest = train_test_split(allData, labels, test_size=0.2, shuffle=True, stratify=labels, random_state=42)
 
-model = GradientBoostingClassifier(verbose=1)
+model = RandomForestClassifier(verbose=1)
 
 print("Training model...")
 model.fit(xTrain, yTrain)
