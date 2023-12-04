@@ -99,7 +99,8 @@ def IndividualData(classObj):
 
 width, height = 1280, 720
 
-listOfClasses = ["L", "M", "N", "O", "P", "Q", "R", "S", "T", 
+listOfClasses = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", 
+                 "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", 
                  "U", "V", "W", "X", "Y", "Z"]
 datasetSize = 500
 
