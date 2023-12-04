@@ -8,6 +8,7 @@ from sklearn.metrics import accuracy_score
 
 allData = []
 labels = []
+orderedLabels = []
 
 for item in os.listdir("ModelCreation/dataset"):
     if item.endswith(".pickle"):
@@ -24,6 +25,8 @@ for item in os.listdir("ModelCreation/dataset"):
             # print(item)
             allData.append(item)
             labels.append(label)
+        if label not in orderedLabels:
+            orderedLabels.append(label)
 
 print("Number of samples: " + str(len(allData)) + "\nNumber of labels: " + str(len(labels)))
 
@@ -41,7 +44,7 @@ score = accuracy_score(yPredict, yTest)
 print("Accuracy: {:.1f}%".format(round((score * 100), 2)))
 
 f = open("model.pickle", "wb")
-pickle.dump({"model": model, "labels": labels}, f)
+pickle.dump({"model": model, "labels": labels, "orderedLabels": orderedLabels}, f)
 f.close()
 
 print("Model saved to model.pickle")

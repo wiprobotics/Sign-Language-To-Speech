@@ -3,19 +3,31 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
+# Load the model file direct from pickle as it keeps the model as an object
 model_dict = pickle.load(open('model.pickle', 'rb'))
 model = model_dict['model']
 model.verbose = 0
 
+# Open the webcam
 cap = cv2.VideoCapture(2)
 
+# Set up mediapipe
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
-
 hands = mp_hands.Hands(min_detection_confidence=0.3, max_num_hands=2)
 
-labelsDict = {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H', 8: 'I or J', 9: 'K', 10: 'L', 11: 'M', 12: 'N', 13: 'O', 14: 'P', 15: 'Q', 16: 'R', 17: 'S', 18: 'T', 19: 'U', 20: 'V', 21: 'W', 22: 'X', 23: 'Y', 24: 'Z'}
+labelsDict = {}
+
+# Dictionary to convert the label number to a letter
+for label in model_dict['orderedLabels']:
+    print(label)
+    labelsDict[model_dict['orderedLabels'].index(label)] = label
+
+print(labelsDict)
+
+# labelsDict = {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H', 8: 'I or J', 9: 'K', 10: 'L', 11: 'M', 12: 'N', 13: 'O', 14: 'P', 15: 'Q', 16: 'R', 17: 'S', 18: 'T', 19: 'U', 20: 'V', 21: 'W', 22: 'X', 23: 'Y', 24: 'Z'}
+
 while True:
     ret, frame = cap.read()
     frame = cv2.flip(frame, 1)
