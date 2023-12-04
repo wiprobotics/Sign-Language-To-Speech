@@ -1,4 +1,6 @@
 # ROB310-HCI-Project
+ 
+## WE DO NOT STORE ANYONES DATA, EVEN MY OWN
 
 ## Project Description
 This project is a sign language interpreter. It uses a camera to detect the hand gestures and then translates them into text. The text will then spoken out loud using a text-to-speech engine. The project is implemented using Python, OpenCV, MediaPipe and SKLearn.
