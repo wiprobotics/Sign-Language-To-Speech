@@ -10,7 +10,10 @@ allData = []
 labels = []
 orderedLabels = []
 
-for item in os.listdir("ModelCreation/dataset"):
+datasetDir = os.listdir("ModelCreation/dataset")
+datasetDir.sort()
+
+for item in datasetDir:
     if item.endswith(".pickle"):
         print("Loading dataset " + item + "...")
         dataDictionary = pickle.load(open("ModelCreation/dataset/" + item, "rb"))

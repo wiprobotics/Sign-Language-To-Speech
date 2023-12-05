@@ -58,4 +58,7 @@ while True:
         cv2.putText(frame, prediction[0], (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
     cv2.imshow('frame', frame)
-    cv2.waitKey(1)
+    if cv2.waitKey(1) == ord('s'):
+        cv2.imwrite('save.jpg', frame)
+    if cv2.waitKey(1) == ord('q'):
+        break
