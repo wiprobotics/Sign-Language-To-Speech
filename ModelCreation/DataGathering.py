@@ -1,8 +1,8 @@
-# $$
 import os
 import cv2
 import mediapipe as mp
 import pickle
+
 
 def IndividualData(classObj):   
     outArray = []
@@ -19,15 +19,19 @@ def IndividualData(classObj):
         if handsResults.multi_hand_landmarks:
             # print(len(handsResults.multi_hand_landmarks))
             # print the hands on the frame
+            
             for handLandmarks in handsResults.multi_hand_landmarks:
+                print(handLandmarks.landmark[mpHands.HandLandmark.PINKY_TIP].x)
                 mpDrawing.draw_landmarks(showFrame, handLandmarks, mpHands.HAND_CONNECTIONS, mpDrawingStyles.get_default_hand_landmarks_style(), mpDrawingStyles.get_default_hand_connections_style())
         
         frameText = ('Now collecting data for class ' + str(classObj) + ' press "Q" to start')
         cv2.putText(showFrame, frameText, (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2, cv2.LINE_AA)
         cv2.imshow('frame', showFrame)
-        if cv2.waitKey(1) == ord('q'):
+        key = cv2.waitKey(1) & 0xFF 
+        if key == ord('q'):
             break
-
+        elif key == ord('c'):
+            cv2.imwrite("ahhh.jpg", showFrame)
     
     for i in range(100):
         ret, frame = cap.read()
@@ -48,7 +52,8 @@ def IndividualData(classObj):
         cv2.imshow("frame", showFrame)
         cv2.waitKey(1)
 
-    for pic in range(datasetSize):
+    pic = 0
+    while pic < datasetSize:
         ret, frame = cap.read()
         frame = cv2.flip(frame, 1)
         showFrame = frame.copy()
@@ -62,6 +67,17 @@ def IndividualData(classObj):
         handsResultsFlipped = handsFlipped.process(rgbFlip)
 
         if handsResults.multi_hand_landmarks:
+            if len(handsResults.multi_hand_landmarks) < 2 and classObj != "C":
+                # print("Only one hand detected, skipping...")
+                frameText = ('Collecting' + str(pic) + "/" + str(datasetSize))
+                cv2.putText(showFrame, frameText, (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2, cv2.LINE_AA)
+                cv2.imshow("frame", showFrame)
+                cv2.waitKey(1)
+                continue
+            else:
+                pic += 1
+
+        if handsResults.multi_hand_landmarks:
             # print(len(handsResults.multi_hand_landmarks))
             # print the hands on the frame
             for handLandmarks in handsResults.multi_hand_landmarks:
@@ -73,25 +89,25 @@ def IndividualData(classObj):
                     dataOut.append(y)
 
             outArray.append(dataOut)
-            print(len(dataOut))
         
         if handsResultsFlipped.multi_hand_landmarks:
-            for handLandmarks in handsResultsFlipped.multi_hand_landmarks:
-                for point in range(len(handLandmarks.landmark)):
-                    x = handLandmarks.landmark[point].x
-                    y = handLandmarks.landmark[point].y
-                    dataOutFlipped.append(x)
-                    dataOutFlipped.append(y)
+            if len(handsResultsFlipped.multi_hand_landmarks) == 2 and classObj != "C":
+                for handLandmarks in handsResultsFlipped.multi_hand_landmarks:
+                    for point in range(len(handLandmarks.landmark)):
+                        x = handLandmarks.landmark[point].x
+                        y = handLandmarks.landmark[point].y
+                        dataOutFlipped.append(x)
+                        dataOutFlipped.append(y)
 
-            outArray.append(dataOut)
-            print(len(dataOut))
+                outArray.append(dataOutFlipped)
 
         frameText = ('Collecting' + str(pic) + "/" + str(datasetSize))
         cv2.putText(showFrame, frameText, (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2, cv2.LINE_AA)
         cv2.imshow("frame", showFrame)
         cv2.waitKey(1)
+        print(len(outArray))
         
-    with open("ModelCreation/dataset/" + str(classObj) + "-2-data.pickle", "wb") as f:
+    with open("ModelCreation/dataset/" + str(classObj) + "-3-data.pickle", "wb") as f:
         pickle.dump({'data': outArray}, f)
     
 
@@ -99,9 +115,9 @@ def IndividualData(classObj):
 
 width, height = 1280, 720
 
-listOfClasses = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", 
-                 "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", 
-                 "U", "V", "W", "X", "Y", "Z"]
+listOfClasses = ["C", "D", "E", "F", "G", "H", "I",
+                 "J", "K", "L", "M", "N", "O", "P", "Q", "R",
+                 "S", "T", "U", "V", "W", "X", "Y", "Z"]
 datasetSize = 500
 
 datasetDir = "ModelCreation/dataset"
