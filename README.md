@@ -49,7 +49,9 @@ To install the project, you will need to install the following dependencies:
 
 ## How it works
 
-- The DataGathering.py file uses the MediaPipe library to detect the hand landmarks and then saves the x and y coordinates of the landmarks in a pickle file. The file also saves the letter that was signed. This is the basis of the dataset however we can't get enough information from just the x and y coordinates of the landmarks. This is why we need to calculate the distances between the tips of the fingers and other points on the hand. This is done in the TipDistance.py file. The file uses the data gathered in the previous step to calculate the distances and then saves the data in a pickle file. This is the most novel part of the project as it makes the project more accurate and thus more reliable.
+<img src="Screenshots/Hands.png" width="600">
+
+- The DataGathering.py file uses the MediaPipe library to detect the hand landmarks and then saves the x and y coordinates of the landmarks in a pickle file. The file also saves the letter that was signed. This is the basis of the dataset however we can't get enough information from just the x and y coordinates of the landmarks. This is why we need to calculate the distances between the tips of the fingers and other points on the hand as shown in the image above though its done for every finger not just the thumb. This data makes the whole thing more accurate as alot of sign language alphabet is about touching fingers together.
 
 ## Credits
 - [MediaPipe](https://google.github.io/mediapipe/)
