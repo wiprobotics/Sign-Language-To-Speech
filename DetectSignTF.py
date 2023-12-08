@@ -42,33 +42,62 @@ class Application(tk.Frame):
         self.buttonFrame = tk.Frame(self)
         self.buttonFrame.grid(row=2, column=3, columnspan=2, padx=10, pady=10)
 
-        self.expandDatasetButton = tk.Button(self.buttonFrame, text="Expand Dataset", command=ExpandDataset)
+        self.expandDatasetButton = tk.Button(self.buttonFrame, text="Start Word Detect", command=ToggleWordDetect)
         self.expandDatasetButton.grid(row=0, column=0, padx=10, pady=10)
    
-        self.recordButton = tk.Button(self.buttonFrame, text="Start Recording", command=StartRecording)
+        self.recordButton = tk.Button(self.buttonFrame, text="Start Recording", command=ToggleRecording)
         self.recordButton.grid(row=0, column=1, padx=10, pady=10)
-
-        self.endRecordingButton = tk.Button(self.buttonFrame, text="End Recording", command=EndRecording)
-        self.endRecordingButton.grid(row=0, column=3, padx=10, pady=10)
        
         self.quit = tk.Button(self, text="QUIT", fg="red", command=self.master.destroy)
         self.quit.grid(row=3, column=0, columnspan=5, pady=10)
 
 
-def ExpandDataset():
-    pass
+def ToggleWordDetect():
+    global wordDetect
+    if wordDetect:
+        wordDetect = False
+        app.expandDatasetButton.config(text="Start Word Detect")
+    else:
+        wordDetect = True
+        app.expandDatasetButton.config(text="Stop Word Detect")
 
 
-def StartRecording():
+def ToggleRecording():
     global recording
-    recording = True
-
-
-def EndRecording():
-    global recording
-    recording = False
     global outRecorder
-    outRecorder.release()
+    if recording:
+        recording = False
+        outRecorder.release()
+        app.recordButton.config(text="Start Recording")
+    else:
+        recording = True
+        app.recordButton.config(text="Stop Recording")
+
+
+def LoadModel():
+    global model, modelDict, labelsDict
+    # Load the model
+    model = keras.models.load_model("Requirements/model.h5")
+    model.verbose = False
+
+    # Load the model dictionary
+    modelDict = pickle.load(open("Requirements/modeldata.pickle", "rb"))
+
+    # Dictionary to convert the label number to a letter
+    labelsDict = {}
+
+    # Dictionary to convert the label number to a letter
+    for label in modelDict['orderedLabels']:
+        labelsDict[modelDict['orderedLabels'].index(label)] = label
+
+
+def LoadMediapipe():
+    global mp_hands, mp_drawing, mp_drawing_styles, hands
+    # Set up mediapipe
+    mp_hands = mp.solutions.hands
+    mp_drawing = mp.solutions.drawing_utils
+    mp_drawing_styles = mp.solutions.drawing_styles
+    hands = mp_hands.Hands(min_detection_confidence=0.3, max_num_hands=2)
 
 
 # Create the tkinter window
@@ -78,29 +107,13 @@ app = Application(master=root)
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 outRecorder = cv2.VideoWriter('output.mp4', fourcc, 20.0, (640, 480))
 recording = False
+wordDetect = False
 
-# Load the model
-model = keras.models.load_model("model.h5")
-model.verbose = False
+LoadModel()
+LoadMediapipe()
 
 # Open the webcam
 cap = cv2.VideoCapture(2)
-
-# Set up mediapipe
-mp_hands = mp.solutions.hands
-mp_drawing = mp.solutions.drawing_utils
-mp_drawing_styles = mp.solutions.drawing_styles
-hands = mp_hands.Hands(min_detection_confidence=0.3, max_num_hands=2)
-
-# Load the model dictionary
-model_dict = pickle.load(open("modeldata.pickle", "rb"))
-
-# Dictionary to convert the label number to a letter
-labelsDict = {}
-
-# Dictionary to convert the label number to a letter
-for label in model_dict['orderedLabels']:
-    labelsDict[model_dict['orderedLabels'].index(label)] = label
 
 # Main loop
 while True:
