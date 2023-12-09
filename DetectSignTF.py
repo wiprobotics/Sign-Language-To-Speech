@@ -26,30 +26,42 @@ class Application(tk.Frame):
 
     def create_widgets(self):
         self.label = tk.Label(self, text="Sign Language Detector", font=("Arial", 24))
-        self.label.grid(row=0, column=0, columnspan=5, pady=10)
+        self.label.grid(row=0, column=0, columnspan=2, pady=10)
 
         self.canvas = tk.Canvas(self, width=640, height=480)
-        self.canvas.grid(row=1, column=0, columnspan=3, rowspan=2)
+        self.canvas.grid(row=1, column=0, columnspan=1, rowspan=1)
+
+        self.holdingFrame = tk.Frame(self)
+        self.holdingFrame.grid(row=1, column=1, columnspan=1, padx=10, pady=10)
+
+        self.infoPanelFrame = tk.Frame(self.holdingFrame)
+        self.infoPanelFrame.grid(row=1, column=0, padx=10, pady=10)
+
+        self.infoPanelLabel = tk.Label(self.infoPanelFrame, text="Info Panel", font=("Arial", 18))
+        self.infoPanelLabel.grid(row=0, column=0, columnspan=1, pady=10)
 
         self.columns = ("out", "probability")
 
-        self.treeview = ttk.Treeview(self, columns=self.columns, show="headings")
-        self.treeview.grid(row=1, column=3, columnspan=2, padx=10, pady=10)
+        self.treeview = ttk.Treeview(self.infoPanelFrame, columns=self.columns, show="headings", height=5)
+        self.treeview.grid(row=1, column=0, columnspan=1, padx=10, pady=10)
+
+        self.style = ttk.Style()
+        self.style.configure("Treeview.column", font=(None, 100))
 
         self.treeview.heading("out", text="Output")
         self.treeview.heading("probability", text="Probability")
-        
-        self.buttonFrame = tk.Frame(self)
-        self.buttonFrame.grid(row=2, column=3, columnspan=2, padx=10, pady=10)
 
-        self.expandDatasetButton = tk.Button(self.buttonFrame, text="Start Word Detect", command=ToggleWordDetect)
-        self.expandDatasetButton.grid(row=0, column=0, padx=10, pady=10)
-   
+        self.buttonFrame = tk.Frame(self.infoPanelFrame)
+        self.buttonFrame.grid(row=2, column=0, columnspan=1, padx=10, pady=10)
+
+        self.wordDetectButton = tk.Button(self.buttonFrame, text="Start Word Detect", command=ToggleWordDetect)
+        self.wordDetectButton.grid(row=0, column=0, padx=10, pady=10)
+
         self.recordButton = tk.Button(self.buttonFrame, text="Start Recording", command=ToggleRecording)
         self.recordButton.grid(row=0, column=1, padx=10, pady=10)
        
         self.quit = tk.Button(self, text="QUIT", fg="red", command=self.master.destroy)
-        self.quit.grid(row=3, column=0, columnspan=5, pady=10)
+        self.quit.grid(row=3, column=0, columnspan=2, pady=10)
 
 
 def ToggleWordDetect():
@@ -100,6 +112,35 @@ def LoadMediapipe():
     hands = mp_hands.Hands(min_detection_confidence=0.3, max_num_hands=2)
 
 
+def LoadWordDictionary():
+    global wordDict
+    wordDict = []
+    with open("Requirements/dict", "r") as f:
+        for line in f:
+            wordDict.append(line.strip())
+
+
+def DetectWord(alreadyDetected):
+    potentialWords = []
+    for word in wordDict:
+        listWord = list(word)
+        failed = False
+
+        if len(alreadyDetected) < len(word):
+            maxCount = len(alreadyDetected)
+        else:
+            maxCount = len(word)
+
+        for count in range(maxCount):
+            if alreadyDetected[count] != listWord[count]:
+                failed = True
+
+        if failed is False:
+            potentialWords.append(word)
+
+    return potentialWords
+
+
 # Create the tkinter window
 root = tk.Tk()
 app = Application(master=root)
@@ -111,12 +152,16 @@ wordDetect = False
 
 LoadModel()
 LoadMediapipe()
+LoadWordDictionary()
+
+print(DetectWord(['h', 'e', 'l', 'l']))
 
 # Open the webcam
 cap = cv2.VideoCapture(2)
 
 # Main loop
 while True:
+
     ret, frame = cap.read()
     frame = cv2.flip(frame, 1)
     dataOut = []
@@ -178,11 +223,13 @@ while True:
 
         cv2.putText(frame, text, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
+        predictions_list = [(labelsDict[i], round((out * 100), 1)) for i, out in enumerate(predictions[0]) if round((out * 100), 1) > 0]
+        predictions_list.sort(key=lambda x: x[1], reverse=True)
+
         app.treeview.delete(*app.treeview.get_children())
-        for i, out in enumerate(predictions[0]):
-            probability = round((out * 100), 1)  # Use 'out' instead of 'predictions[0][i]'
-            app.treeview.insert("", tk.END, values=(labelsDict[i], probability))
-          
+        for label, probability in predictions_list:
+            app.treeview.insert("", tk.END, values=(label, probability))
+
     outFrame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
     app.photo = ImageTk.PhotoImage(image=Image.fromarray(outFrame))
     app.canvas.create_image(0, 0, image=app.photo, anchor="nw")
@@ -190,9 +237,3 @@ while True:
         print("Recording")
         outRecorder.write(frame)
     root.update()
-
-    # cv2.imshow('frame', frame)
-    # if cv2.waitKey(1) == ord('s'):
-    #     cv2.imwrite('save.jpg', frame)
-    # if cv2.waitKey(1) == ord('q'):
-    #     break
