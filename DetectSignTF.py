@@ -6,6 +6,9 @@ import tkinter as tk
 import math
 import threading
 import time
+import gtts
+import os
+import sys
 
 from tensorflow import keras
 
@@ -13,6 +16,7 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 
 
+# The main tkinter application window
 class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
@@ -74,10 +78,11 @@ class Application(tk.Frame):
         self.recordButton = tk.Button(self.buttonFrame, text="Start Recording", command=ToggleRecording)
         self.recordButton.grid(row=0, column=1, padx=10, pady=10)
        
-        self.quit = tk.Button(self, text="QUIT", fg="red", command=self.master.destroy)
+        self.quit = tk.Button(self, text="QUIT", fg="red", command=QuitApp)
         self.quit.grid(row=3, column=0, columnspan=2, pady=10)
 
 
+# A custom timer class that allows for the elapsed time to be calculated
 class CustomTimer(threading.Timer):
     started_at = None
 
@@ -92,6 +97,7 @@ class CustomTimer(threading.Timer):
         return self.interval - self.elapsed()
 
 
+# Function to toggle the word detect button and feature
 def ToggleWordDetect():
     global wordDetect
     if wordDetect:
@@ -102,6 +108,7 @@ def ToggleWordDetect():
         app.wordDetectButton.config(text="Stop Word Detect")
 
 
+# Function to toggle the recording button and feature
 def ToggleRecording():
     global recording
     global outRecorder
@@ -114,6 +121,7 @@ def ToggleRecording():
         app.recordButton.config(text="Stop Recording")
 
 
+# Function to load the model and required dictionaries
 def LoadModel():
     global model, modelDict, labelsDict
     # Load the model
@@ -131,6 +139,7 @@ def LoadModel():
         labelsDict[modelDict['orderedLabels'].index(label)] = label
 
 
+# Function to load the mediapipe library
 def LoadMediapipe():
     global mp_hands, mp_drawing, mp_drawing_styles, hands
     # Set up mediapipe
@@ -140,35 +149,7 @@ def LoadMediapipe():
     hands = mp_hands.Hands(min_detection_confidence=0.3, max_num_hands=2)
 
 
-def LoadWordDictionary():
-    global wordDict
-    wordDict = []
-    with open("Requirements/dict", "r") as f:
-        for line in f:
-            wordDict.append(line.strip())
-
-
-def DetectWord(alreadyDetected):
-    potentialWords = []
-    for word in wordDict:
-        listWord = list(word)
-        failed = False
-
-        if len(alreadyDetected) < len(word):
-            maxCount = len(alreadyDetected)
-        else:
-            maxCount = len(word)
-
-        for count in range(maxCount):
-            if alreadyDetected[count] != listWord[count]:
-                failed = True
-
-        if failed is False:
-            potentialWords.append(word)
-
-    return potentialWords
-
-
+# Function which is run when the word detect timer ends
 def TimerEnd():
     global timerOn
     global wordDetect
@@ -178,43 +159,77 @@ def TimerEnd():
     timer = CustomTimer(4, TimerEnd)
     timerOn = False
     lastLetter = ""
-    alreadyDetected.append(labelsDict[letterPrediction])
-    print(DetectWord(alreadyDetected))
+    if labelsDict[letterPrediction] not in commandWords:
+        alreadyDetected.append(labelsDict[letterPrediction])
+    else:
+        if labelsDict[letterPrediction] == "Backspace":
+            if len(alreadyDetected) > 0:
+                alreadyDetected.pop()
+        elif labelsDict[letterPrediction] == "Enter":
+            print("Enter detected")
+            outWord = ""
+            for item in alreadyDetected:
+                outWord += item
+            alreadyDetected = []
+            SpeakWord(outWord)
+        elif labelsDict[letterPrediction] == "Space":
+            alreadyDetected.append(" ")
+
+
+# Speaks a word using the gtts library
+def SpeakWord(word):
+    tts = gtts.gTTS(word)
+    tts.save("word.mp3")
+    os.system("mpg123 word.mp3")
+
+
+# Function to quit the application
+def QuitApp():
+    cap.release()
+    outRecorder.release()
+    sys.exit()
 
 
 # Create the tkinter window
 root = tk.Tk()
 app = Application(master=root)
 
+# Object variables and initialisation
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 outRecorder = cv2.VideoWriter('output.mp4', fourcc, 20.0, (640, 480))
 timer = CustomTimer(4, TimerEnd)
 
+# Boolean variables
 recording = False
 wordDetect = False
 timerOn = False
 
+# String and list variables
 lastLetter = ""
 alreadyDetected = []
+commandWords = ["Backspace", "Enter", "Space"]
 
+# Run the initialisation functions
 LoadModel()
 LoadMediapipe()
-LoadWordDictionary()
 
-# Open the webcam
+# Open the webcam feed
 cap = cv2.VideoCapture(2)
 
 # Main loop
 while True:
-
+    # Read the frame from the webcam
     ret, frame = cap.read()
     frame = cv2.flip(frame, 1)
     dataOut = []
 
+    # Convert the frame to RGB for mediapipe
     imgRGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
+    # Get the hand landmarks from the frame
     handsResults = hands.process(imgRGB)
 
+    # If there are hands in the frame run through them and extract x and y coordinates
     if handsResults.multi_hand_landmarks:
         for handLandmarks in handsResults.multi_hand_landmarks:
             for i in range(len(handLandmarks.landmark)):
@@ -224,25 +239,34 @@ while True:
                 dataOut.append(y)
             mp_drawing.draw_landmarks(frame, handLandmarks, mp_hands.HAND_CONNECTIONS, mp_drawing_styles.get_default_hand_landmarks_style(), mp_drawing_styles.get_default_hand_connections_style())
 
+        # Pad the data to 84 elements incase their is only one hand
         if len(dataOut) < 84:
             dataOut = np.pad(dataOut, (0, 84 - len(dataOut)), 'constant')
         # Truncate or pad the item to exactly 84 elements
         dataOut = dataOut[:84]
 
+        # Arrays to hold the x and y coordinates of the tips and base of the fingers and palms
         hand1tips = [[], []]
         hand2tips = [[], []]
 
+        # If there are two hands in the frame calculate the distance between each tip of hand 1 and each tip of hand 2
         if len(handsResults.multi_hand_landmarks) > 1:
             # Get the coordinates of the tips of the fingers for hand 1
             for h1 in range(0, 41, 8):
-                hand1tips[0].append(dataOut[h1])
-                hand1tips[1].append(dataOut[h1 + 1])
+                hand1tips[0].append(dataOut[h1])      # x for tip of finger
+                hand1tips[1].append(dataOut[h1 + 1])  # y for tip of finger
+                if (h1 + 2) < 41:
+                    hand1tips[0].append(dataOut[h1 + 2])  # x for base of next finger
+                    hand1tips[1].append(dataOut[h1 + 3])  # y for base of next finger
 
             # Get the coordinates of the tips of the fingers for hand 2
             for h2 in range(42, 84, 8):
-                hand2tips[0].append(dataOut[h2])
-                hand2tips[1].append(dataOut[h2 + 1])
-
+                hand2tips[0].append(dataOut[h2])      # x for tip of finger
+                hand2tips[1].append(dataOut[h2 + 1])  # y for tip of finger
+                if (h2 + 2) < 84:
+                    hand2tips[0].append(dataOut[h2 + 2])  # x for base of next finger
+                    hand2tips[1].append(dataOut[h2 + 3])  # y for base of next finger
+            
             # Calculate the distance between each tip of hand 1 and each tip of hand 2
             distances = []
             for point1 in range(len(hand1tips[0])):
@@ -253,32 +277,41 @@ while True:
 
             dataOut = np.append(dataOut, distances)
         else:
-            dataOut = np.pad(dataOut, (0, 120 - len(dataOut)), 'constant')
+            dataOut = np.pad(dataOut, (0, 205 - len(dataOut)), 'constant')
 
-        dataOut = np.array(dataOut).reshape(1, 120)
+        # Reshape the data to be a 1x205 array for the tensorflow model
+        dataOut = np.array(dataOut).reshape(1, 205)
 
+        # Get the prediction from the model
         predictions = model.predict(dataOut)
 
         # Get the prediction in letter form
         letterPrediction = np.argmax(predictions[0])
 
+        # Display the prediction on the screen
         text = "Prediction: " + str(labelsDict[letterPrediction])
-
         cv2.putText(frame, text, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
+        # Get only the predictions with a probability of over 0 and put them 
+        # in a sorted list based on probability
         predictions_list = [(labelsDict[i], round((out * 100), 1)) for i, out in enumerate(predictions[0]) if round((out * 100), 1) > 0]
         predictions_list.sort(key=lambda x: x[1], reverse=True)
 
+        # If word detect is on then run through the letter detection logic
         if wordDetect:
+            # If the last letter is empty then set it to the current letter
             if lastLetter == "":
                 lastLetter = labelsDict[letterPrediction]
                 print("First letter detected")
 
+            # If the last letter is the same as the current letter then start the timer
             elif lastLetter == labelsDict[letterPrediction] and timerOn is False:
                 timerOn = True
                 timer.start()
                 print("Timer started")
 
+            # If the last letter is not the same as the current letter
+            # (if you're signing something else) then reset the timer
             elif lastLetter != labelsDict[letterPrediction]:
                 lastLetter = labelsDict[letterPrediction]
                 timer.cancel()
@@ -286,10 +319,12 @@ while True:
                 timerOn = False
                 print("Timer cancelled")
 
+        # Display the predictions in the info panel table
         app.treeview.delete(*app.treeview.get_children())
         for label, probability in predictions_list:
             app.treeview.insert("", tk.END, values=(label, probability))
 
+    # If there are no hands in the frame then display a message on the screen
     else:
         app.treeview.delete(*app.treeview.get_children())
         cv2.putText(frame, "No hands detected", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
@@ -297,6 +332,7 @@ while True:
         timer = CustomTimer(4, TimerEnd)
         timerOn = False
 
+    # Display the word detect timer and the already detected words
     if timerOn:
         app.wordDetectTimer.config(text=str(round(timer.remaining(), 2)))
     else:
@@ -306,7 +342,11 @@ while True:
     app.canvas.create_image(0, 0, image=app.photo, anchor="nw")
     app.wordDetectText.delete("1.0", tk.END)
     app.wordDetectText.insert(tk.END, " ".join(alreadyDetected))
+
+    # If recording is on then write the frame to the output video
     if recording:
         print("Recording")
         outRecorder.write(frame)
+
+    # Update the tkinter window
     root.update()

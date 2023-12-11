@@ -42,7 +42,6 @@ def IndividualData(classObj):
         handsResults = hands.process(rgbFrame)
 
         if handsResults.multi_hand_landmarks:
-            # print(len(handsResults.multi_hand_landmarks))
             # print the hands on the frame
             for handLandmarks in handsResults.multi_hand_landmarks:
                 mpDrawing.draw_landmarks(showFrame, handLandmarks, mpHands.HAND_CONNECTIONS, mpDrawingStyles.get_default_hand_landmarks_style(), mpDrawingStyles.get_default_hand_connections_style())
@@ -67,15 +66,24 @@ def IndividualData(classObj):
         handsResultsFlipped = handsFlipped.process(rgbFlip)
 
         if handsResults.multi_hand_landmarks:
-            if len(handsResults.multi_hand_landmarks) < 2 and classObj != "C":
+            if len(handsResultsFlipped.multi_hand_landmarks) == 2:
+                print("Two hands detected, for double hand sign...")
                 # print("Only one hand detected, skipping...")
                 frameText = ('Collecting' + str(pic) + "/" + str(datasetSize))
                 cv2.putText(showFrame, frameText, (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2, cv2.LINE_AA)
                 cv2.imshow("frame", showFrame)
                 cv2.waitKey(1)
-                continue
-            else:
                 pic += 1
+            elif classObj in listOfSingleHandSigns:
+                print("Only one hand detected, for single hand sign...")
+                frameText = ('Collecting' + str(pic) + "/" + str(datasetSize))
+                cv2.putText(showFrame, frameText, (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2, cv2.LINE_AA)
+                cv2.imshow("frame", showFrame)
+                cv2.waitKey(1)
+                pic += 1
+            else:
+                continue
+    
 
         if handsResults.multi_hand_landmarks:
             # print(len(handsResults.multi_hand_landmarks))
@@ -91,13 +99,26 @@ def IndividualData(classObj):
             outArray.append(dataOut)
         
         if handsResultsFlipped.multi_hand_landmarks:
-            if len(handsResultsFlipped.multi_hand_landmarks) == 2 and classObj != "C":
+            if len(handsResultsFlipped.multi_hand_landmarks) == 2:
+                print("Two hands detected, for double hand sign...")
                 for handLandmarks in handsResultsFlipped.multi_hand_landmarks:
                     for point in range(len(handLandmarks.landmark)):
                         x = handLandmarks.landmark[point].x
                         y = handLandmarks.landmark[point].y
                         dataOutFlipped.append(x)
                         dataOutFlipped.append(y)
+
+            elif classObj in listOfSingleHandSigns:
+                print("Only one hand detected, for single hand sign...")
+                for handLandmarks in handsResultsFlipped.multi_hand_landmarks:
+                    for point in range(len(handLandmarks.landmark)):
+                        x = handLandmarks.landmark[point].x
+                        y = handLandmarks.landmark[point].y
+                        dataOutFlipped.append(x)
+                        dataOutFlipped.append(y)
+            
+            else:
+                print("Only one hand detected, skipping...")
 
                 outArray.append(dataOutFlipped)
 
@@ -115,9 +136,8 @@ def IndividualData(classObj):
 
 width, height = 1280, 720
 
-listOfClasses = ["C", "D", "E", "F", "G", "H", "I",
-                 "J", "K", "L", "M", "N", "O", "P", "Q", "R",
-                 "S", "T", "U", "V", "W", "X", "Y", "Z"]
+listOfClasses = ["Backspace", "Enter", "Space"]
+listOfSingleHandSigns = ["Backspace", "Enter", "Space"]
 datasetSize = 500
 
 datasetDir = "ModelCreation/dataset"

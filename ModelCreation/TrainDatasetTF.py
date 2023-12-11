@@ -25,18 +25,18 @@ for file in datasetDir:
         label = str(file.split("-")[0])
         for landmarks in data:
             # Fill the item with 0s if it is less than 120
-            if len(landmarks) < 120:
-                padding = (0, 120 - len(landmarks))
+            if len(landmarks) < 205:
+                padding = (0, 205 - len(landmarks))
                 landmarks = np.pad(landmarks, padding, 'constant')
             # Truncate or pad the item to exactly 84 elements
-            landmarks = landmarks[:120]
+            landmarks = landmarks[:205]
             allData.append(landmarks)
             labels.append(label)
         if label not in orderedLabels:
             orderedLabels.append(label)
 
 num_classes = len(orderedLabels)
-input_shape = (120,)
+input_shape = (205,)
 
 model = keras.Sequential([
     layers.Flatten(input_shape=(input_shape)),  # Input layer

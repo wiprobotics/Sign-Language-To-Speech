@@ -16,6 +16,7 @@ The project is divided into 4 main files:
 
 ## Installation
 To install the project, you will need to install the following dependencies:
+### Python:
 - Python 3.7
 - OpenCV
 - MediaPipe
@@ -24,6 +25,11 @@ To install the project, you will need to install the following dependencies:
 - Keras
 - Pickle
 - Numpy
+- gtts
+
+### Other:
+- A webcam
+- mpg123 (for linux users, to play the audio files)
 
 ## Usage
 - First run the DataGathering.py file to gather the data for the training of the model. This will be done by a user signing the letters of the alphabet and the data will be saved in a pickle file.

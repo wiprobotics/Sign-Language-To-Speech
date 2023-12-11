@@ -32,13 +32,19 @@ for file in datasetDir:
             
             # Get the coordinates of the tips of the fingers for hand 1
             for h1 in range(0, 41, 8):
-                hand1tips[0].append(landmarks[h1])
-                hand1tips[1].append(landmarks[h1 + 1])
+                hand1tips[0].append(landmarks[h1])      # x for tip of finger
+                hand1tips[1].append(landmarks[h1 + 1])  # y for tip of finger
+                if (h1 + 2) < 41:
+                    hand1tips[0].append(landmarks[h1 + 2])  # x for base of next finger
+                    hand1tips[1].append(landmarks[h1 + 3])  # y for base of next finger
 
             # Get the coordinates of the tips of the fingers for hand 2
             for h2 in range(42, 84, 8):
-                hand2tips[0].append(landmarks[h2])
-                hand2tips[1].append(landmarks[h2 + 1])
+                hand2tips[0].append(landmarks[h2])      # x for tip of finger
+                hand2tips[1].append(landmarks[h2 + 1])  # y for tip of finger
+                if (h2 + 2) < 84:
+                    hand2tips[0].append(landmarks[h2 + 2])  # x for base of next finger
+                    hand2tips[1].append(landmarks[h2 + 3])  # y for base of next finger
 
             # Calculate the distance between each tip of hand 1 and each tip of hand 2
             distances = []
