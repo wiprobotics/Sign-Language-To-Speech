@@ -4,11 +4,10 @@ import mediapipe as mp
 import numpy as np
 import tkinter as tk
 import math
+import threading
+import time
 
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
 from tensorflow import keras
-from tensorflow.keras import layers
 
 from tkinter import ttk
 from PIL import Image, ImageTk
@@ -33,6 +32,21 @@ class Application(tk.Frame):
 
         self.holdingFrame = tk.Frame(self)
         self.holdingFrame.grid(row=1, column=1, columnspan=1, padx=10, pady=10)
+
+        self.wordDetectFrame = tk.Frame(self.holdingFrame)
+        self.wordDetectFrame.grid(row=0, column=0, padx=10, pady=10)
+
+        self.wordDetectLabel = tk.Label(self.wordDetectFrame, text="Word Detect", font=("Arial", 18))
+        self.wordDetectLabel.grid(row=0, column=0, columnspan=1, pady=10)
+
+        self.wordDetectTimerText = tk.Label(self.wordDetectFrame, text="Hold sign for: ")
+        self.wordDetectTimerText.grid(row=1, column=0, columnspan=1, pady=10)
+
+        self.wordDetectTimer = tk.Label(self.wordDetectFrame, text="2")
+        self.wordDetectTimer.grid(row=1, column=1, columnspan=1, pady=10)
+
+        self.wordDetectText = tk.Text(self.wordDetectFrame, height=5, width=20)
+        self.wordDetectText.grid(row=2, column=0, columnspan=2, padx=10, pady=10)
 
         self.infoPanelFrame = tk.Frame(self.holdingFrame)
         self.infoPanelFrame.grid(row=1, column=0, padx=10, pady=10)
@@ -64,14 +78,28 @@ class Application(tk.Frame):
         self.quit.grid(row=3, column=0, columnspan=2, pady=10)
 
 
+class CustomTimer(threading.Timer):
+    started_at = None
+
+    def start(self):
+        self.started_at = time.time()
+        threading.Timer.start(self)
+ 
+    def elapsed(self):
+        return time.time() - self.started_at
+
+    def remaining(self):
+        return self.interval - self.elapsed()
+
+
 def ToggleWordDetect():
     global wordDetect
     if wordDetect:
         wordDetect = False
-        app.expandDatasetButton.config(text="Start Word Detect")
+        app.wordDetectButton.config(text="Start Word Detect")
     else:
         wordDetect = True
-        app.expandDatasetButton.config(text="Stop Word Detect")
+        app.wordDetectButton.config(text="Stop Word Detect")
 
 
 def ToggleRecording():
@@ -141,20 +169,37 @@ def DetectWord(alreadyDetected):
     return potentialWords
 
 
+def TimerEnd():
+    global timerOn
+    global wordDetect
+    global lastLetter
+    global alreadyDetected
+    global timer
+    timer = CustomTimer(4, TimerEnd)
+    timerOn = False
+    lastLetter = ""
+    alreadyDetected.append(labelsDict[letterPrediction])
+    print(DetectWord(alreadyDetected))
+
+
 # Create the tkinter window
 root = tk.Tk()
 app = Application(master=root)
 
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 outRecorder = cv2.VideoWriter('output.mp4', fourcc, 20.0, (640, 480))
+timer = CustomTimer(4, TimerEnd)
+
 recording = False
 wordDetect = False
+timerOn = False
+
+lastLetter = ""
+alreadyDetected = []
 
 LoadModel()
 LoadMediapipe()
 LoadWordDictionary()
-
-print(DetectWord(['h', 'e', 'l', 'l']))
 
 # Open the webcam
 cap = cv2.VideoCapture(2)
@@ -212,27 +257,55 @@ while True:
 
         dataOut = np.array(dataOut).reshape(1, 120)
 
-        # print(dataOut)
-
         predictions = model.predict(dataOut)
 
         # Get the prediction in letter form
         letterPrediction = np.argmax(predictions[0])
 
-        text = "Prediction: " + str(labelsDict[letterPrediction] + ":" + str(round((predictions[0][letterPrediction] * 100), 1)) + "%")
+        text = "Prediction: " + str(labelsDict[letterPrediction])
 
         cv2.putText(frame, text, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
         predictions_list = [(labelsDict[i], round((out * 100), 1)) for i, out in enumerate(predictions[0]) if round((out * 100), 1) > 0]
         predictions_list.sort(key=lambda x: x[1], reverse=True)
 
+        if wordDetect:
+            if lastLetter == "":
+                lastLetter = labelsDict[letterPrediction]
+                print("First letter detected")
+
+            elif lastLetter == labelsDict[letterPrediction] and timerOn is False:
+                timerOn = True
+                timer.start()
+                print("Timer started")
+
+            elif lastLetter != labelsDict[letterPrediction]:
+                lastLetter = labelsDict[letterPrediction]
+                timer.cancel()
+                timer = CustomTimer(4, TimerEnd)
+                timerOn = False
+                print("Timer cancelled")
+
         app.treeview.delete(*app.treeview.get_children())
         for label, probability in predictions_list:
             app.treeview.insert("", tk.END, values=(label, probability))
 
+    else:
+        app.treeview.delete(*app.treeview.get_children())
+        cv2.putText(frame, "No hands detected", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+        timer.cancel()
+        timer = CustomTimer(4, TimerEnd)
+        timerOn = False
+
+    if timerOn:
+        app.wordDetectTimer.config(text=str(round(timer.remaining(), 2)))
+    else:
+        app.wordDetectTimer.config(text="4")
     outFrame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
     app.photo = ImageTk.PhotoImage(image=Image.fromarray(outFrame))
     app.canvas.create_image(0, 0, image=app.photo, anchor="nw")
+    app.wordDetectText.delete("1.0", tk.END)
+    app.wordDetectText.insert(tk.END, " ".join(alreadyDetected))
     if recording:
         print("Recording")
         outRecorder.write(frame)
