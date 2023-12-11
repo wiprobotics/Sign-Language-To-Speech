@@ -57,6 +57,15 @@ To install the project, you will need to install the following dependencies:
 
 - The DataGathering.py file uses the MediaPipe library to detect the hand landmarks and then saves the x and y coordinates of the landmarks in a pickle file. The file also saves the letter that was signed. This is the basis of the dataset however we can't get enough information from just the x and y coordinates of the landmarks. This is why we need to calculate the distances between the tips of the fingers and other points on the hand as shown in the image above though its done for every finger not just the thumb. This data makes the whole thing more accurate as alot of sign language alphabet is about touching fingers together.
 
+## Cybersecurity
+
+| Vulnerability | Description | Mitigation |
+| ------------- | ----------- | ---------- |
+| Storing of data for training | The data used to train the model is stored in a pickle file. This file can be accessed by anyone with access to the computer. | The data is stored in a pickle file which is not encrypted. This means that anyone with access to the computer can access the data. This is not a big issue as the data is just the x and y coordinates of the hand landmarks and the letter that was signed. This data is not personal and can't be used to identify anyone. |
+| Opensource project | The project is opensource which means that anyone can access the code and see how it works. | This is not a big issue as the project is not meant to be used in a secure environment. The project is meant to be used by people who want to learn sign language or by people who want to communicate with people who know sign language. |
+| Opensource editing | The project is opensource which means that anyone can edit the code and change how it works. | This is not a big issue as I can select what code is incorporated into the project. This means that I can make sure that the code is safe and secure. |
+| Opensource dependencies | The project uses opensource dependencies which means that anyone can access the code and see how it works. | This is not a big issue as the dependencies are well known and trusted. This means that they are safe and secure. |
+
 ## Credits
 - [MediaPipe](https://google.github.io/mediapipe/)
 - [OpenCV](https://opencv.org/)
@@ -65,4 +74,7 @@ To install the project, you will need to install the following dependencies:
 - [Keras](https://keras.io/)
 - [Pickle](https://docs.python.org/3/library/pickle.html)
 - [Numpy](https://numpy.org/)
-- Me
+- [gtts](https://pypi.org/project/gTTS/)
+- [mpg123](https://www.mpg123.de/)
+- [Sign Language Alphabet](https://deafaction.org/bsl-courses/learn-the-bsl-alphabet/)
+- [Me](https://github.falmouth.ac.uk/JA244121)
