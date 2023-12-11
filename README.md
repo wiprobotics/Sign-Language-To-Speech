@@ -66,6 +66,7 @@ To install the project, you will need to install the following dependencies:
 | Opensource editing | The project is opensource which means that anyone can edit the code and change how it works. | This is not a big issue as I can select what code is incorporated into the project. This means that I can make sure that the code is safe and secure. |
 | Opensource dependencies | The project uses opensource dependencies which means that anyone can access the code and see how it works. | This is not a big issue as the dependencies are well known and trusted. This means that they are safe and secure. |
 
+
 ## Credits
 - [MediaPipe](https://google.github.io/mediapipe/)
 - [OpenCV](https://opencv.org/)
