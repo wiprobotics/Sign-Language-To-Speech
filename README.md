@@ -69,10 +69,10 @@ To install the project, you will need to install the following dependencies:
 
 ## Future Development
 
-| [x] | Feature | Description |
+| &#10004; | Feature | Description |
 | --- | ------- | ----------- |
-| [ ] | Moving signs | The ability to detect signs that are moving, for example J |
-| [ ] | Word signs | The ability to detect full words, for example Hello and thank you, this would rely on the moving signs feature, and would probably require some torso detection due to using the whole body to make the sign |
+| | Moving signs | The ability to detect signs that are moving, for example J |
+| | Word signs | The ability to detect full words, for example Hello and thank you, this would rely on the moving signs feature, and would probably require some torso detection due to using the whole body to make the sign |
 
 ## Credits
 - [MediaPipe](https://google.github.io/mediapipe/)
