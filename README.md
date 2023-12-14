@@ -65,7 +65,14 @@ To install the project, you will need to install the following dependencies:
 | Opensource project | The project is opensource which means that anyone can access the code and see how it works. | This is not a big issue as the project is not meant to be used in a secure environment. The project is meant to be used by people who want to learn sign language or by people who want to communicate with people who know sign language. |
 | Opensource editing | The project is opensource which means that anyone can edit the code and change how it works. | This is not a big issue as I can select what code is incorporated into the project. This means that I can make sure that the code is safe and secure. |
 | Opensource dependencies | The project uses opensource dependencies which means that anyone can access the code and see how it works. | This is not a big issue as the dependencies are well known and trusted. This means that they are safe and secure. |
+| My images in the README.md file | The images in the README.md file are stored in the repository. This means that anyone with access to the repository can access the images. | I gave myself permission to use those images. |
 
+## Future Development
+
+| <input type="checkbox" disabled checked /> works | Feature | Description |
+| --- | ------- | ----------- |
+| <input type="checkbox" disabled /> works | Moving signs | The ability to detect signs that are moving, for example J |
+| <input type="checkbox" disabled /> works | Word signs | The ability to detect full words, for example Hello and thank you, this would rely on the moving signs feature, and would probably require some torso detection due to using the whole body to make the sign |
 
 ## Credits
 - [MediaPipe](https://google.github.io/mediapipe/)

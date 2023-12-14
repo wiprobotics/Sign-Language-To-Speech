@@ -11,7 +11,6 @@ import os
 import sys
 
 from tensorflow import keras
-
 from tkinter import ttk
 from PIL import Image, ImageTk
 
@@ -208,6 +207,7 @@ timerOn = False
 lastLetter = ""
 alreadyDetected = []
 commandWords = ["Backspace", "Enter", "Space"]
+bannedWords = [""]
 
 # Run the initialisation functions
 LoadModel()
