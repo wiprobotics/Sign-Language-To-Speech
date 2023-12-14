@@ -69,10 +69,10 @@ To install the project, you will need to install the following dependencies:
 
 ## Future Development
 
-| <input type="checkbox" disabled checked /> works | Feature | Description |
+| [x] | Feature | Description |
 | --- | ------- | ----------- |
-| <input type="checkbox" disabled /> works | Moving signs | The ability to detect signs that are moving, for example J |
-| <input type="checkbox" disabled /> works | Word signs | The ability to detect full words, for example Hello and thank you, this would rely on the moving signs feature, and would probably require some torso detection due to using the whole body to make the sign |
+| [ ] | Moving signs | The ability to detect signs that are moving, for example J |
+| [ ] | Word signs | The ability to detect full words, for example Hello and thank you, this would rely on the moving signs feature, and would probably require some torso detection due to using the whole body to make the sign |
 
 ## Credits
 - [MediaPipe](https://google.github.io/mediapipe/)
