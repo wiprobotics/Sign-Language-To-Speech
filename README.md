@@ -73,6 +73,7 @@ To install the project, you will need to install the following dependencies:
 | --- | ------- | ----------- |
 | | Moving signs | The ability to detect signs that are moving, for example J |
 | | Word signs | The ability to detect full words, for example Hello and thank you, this would rely on the moving signs feature, and would probably require some torso detection due to using the whole body to make the sign |
+| | Attaching to a robot | The end goal of this project would be an encapsulated interpreter attached to a robot body, this robot would turn to face the person signing ensuring they are always in view |
 
 ## Credits
 - [MediaPipe](https://google.github.io/mediapipe/)
